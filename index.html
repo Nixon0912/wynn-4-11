@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FinSight – Homepage</title>
+  <!-- Link to your main CSS file if needed -->
+  <link rel="stylesheet" href="/Users/nixonng0912/Downloads/isom4007/FinSight/static/css/main.css">
+  <style>
+    /* Basic Reset */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    /* Force body background to be transparent, overriding any default backgrounds */
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      color: #333;
+      background: none !important;
+      background-color: transparent !important;
+      position: relative;
+      overflow-x: hidden;
+      line-height: 1.6; /* Improved readability */
+    }
+    /* Background Video */
+    #background-video {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      z-index: -1;
+      /* Adjust opacity to show more or less color from the video */
+      opacity: 0.4;
+    }
+    /* Header with semi-transparent gradient so video is visible behind it */
+    header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center; /* Center vertically */
+      text-align: center; /* Center horizontally */
+      background: linear-gradient(
+        135deg, 
+        rgba(10, 116, 218, 0.8) 0%, 
+        rgba(5, 112, 184, 0.8) 100%
+      ) !important;
+      color: #fff;
+      padding: 2rem 1rem; /* More padding for better spacing */
+    }
+    header h1 {
+      margin: 0;
+      font-weight: 600;
+      letter-spacing: 1px;
+      margin-bottom: 1rem; /* Increased spacing */
+      font-size: 2.5rem; /* Larger font size for emphasis */
+    }
+    nav.header-nav {
+      display: flex;
+      gap: 15px;
+    }
+    /* Nav links also semi-transparent */
+    nav.header-nav a {
+      text-decoration: none;
+      background-color: rgba(10, 116, 218, 0.9);
+      color: #fff;
+      padding: 0.7rem 1.5rem; /* Larger buttons */
+      border-radius: 5px;
+      font-weight: 600;
+      transition: background-color 0.2s;
+    }
+    nav.header-nav a:hover {
+      background-color: rgba(6, 92, 156, 0.9);
+    }
+    /* Main Content - slightly translucent background */
+    main {
+      padding: 2rem 1rem; /* More padding for better spacing */
+      position: relative;
+      z-index: 1;
+      background-color: rgba(255, 255, 255, 0.8); /* Added light background for readability */
+      margin-bottom: 2rem;
+      text-align: center; /* Center all content inside main */
+    }
+    section {
+      margin-bottom: 2rem;
+    }
+    /* Demo Video Section */
+    .demo-video {
+      margin: 2rem 0;
+      padding: 1rem;
+      border-radius: 5px;
+    }
+    .demo-video video {
+      display: block;
+      width: 100%;
+      max-width: 1000px;
+      margin: 1rem auto;
+      border-radius: 5px;
+    }
+    /* Preview container also translucent */
+    .dashboard-preview {
+      margin: 2rem 0;
+      padding: 1rem;
+      border-radius: 5px;
+      position: relative;
+      overflow: hidden;
+    }
+    .dashboard-preview iframe {
+      width: 100%;
+      height: 600px;
+      border: none;
+      border-radius: 5px;
+    }
+    /* Footer also semi-transparent */
+    footer {
+      text-align: center;
+      padding: 1rem 0;
+      background-color: rgba(242, 242, 242, 0.85) !important;
+      color: #333;
+      font-size: 0.9rem;
+      position: relative;
+      z-index: 1;
+    }
+    /* General typography improvements */
+    h2 {
+      font-size: 2rem; /* Slightly larger headings */
+      margin-bottom: 1rem; /* Space below headings */
+    }
+    p, li {
+      font-size: 1.1rem; /* Larger text for readability */
+      margin-bottom: 1rem; /* Space between paragraphs and list items */
+    }
+    ul {
+      list-style-position: inside; /* Align bullets with text */
+      padding-left: 0; /* Remove default padding */
+    }
+  </style>
+</head>
+<body>
+  <!-- Background Video -->
+  <video autoplay muted loop playsinline id="background-video">
+    <source src="background.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+  <header>
+    <h1>Welcome to FinSight</h1>
+    <nav class="header-nav">
+      <a href="admin_login.php">Admin Login</a>
+      <a href="login.php">Login</a>
+      <a href="register.php">Register</a>
+    </nav>
+  </header>
+  <main>
+    <section>
+      <h2>Your One-Stop Financial Insights Platform</h2>
+      <p>
+        FinSight helps you track trending financial news and topics.  
+        Stay up-to-date, focus on what matters, and make informed decisions.
+      </p>
+    </section>
+    
+    <section>
+      <h2>Features</h2>
+      <ul>
+        <li>Data-driven dashboards</li>
+        <li>Keyword-based interests</li>
+        <li>Financial topic analysis</li>
+        <li>Trending news aggregation</li>
+      </ul>
+    </section>
+    <!-- New Demo Video Section -->
+    <section class="demo-video">
+      <h2>Demo Video</h2>
+      <p>Check out this short overview of FinSight’s features in action:</p>
+      <video controls poster="/Users/nixonng0912/Downloads/isom4007/WechatIMG3410.jpg">
+        <source src="walkthrough.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+      </video>      
+    </section>
+    <!-- Sample Dashboard -->
+    <section class="dashboard-preview">
+      <h2>Sample Dashboard</h2>
+      <p>
+        Below is a live preview of your dashboard in static demo mode. 
+        <strong>All interactive elements are disabled.</strong>
+        For full functionality, please <a href="login.php" style="color: #0A74DA; font-weight: bold;">log in</a>.
+      </p>
+      <iframe id="demoIframe" src="dashboard.html"></iframe>
+    </section>
+  </main>
+  <footer>
+    <p>&copy; 2025 FinSight. All rights reserved.</p>
+  </footer>
+  <!-- Script to disable all interactions inside the iframe but allow scrolling -->
+  <script>
+    document.getElementById('demoIframe').onload = function() {
+      const iframe = document.getElementById('demoIframe');
+      const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+      
+      // Disable all interactive elements inside the iframe
+      const disableElements = iframeDoc.querySelectorAll("button, a, input, select, textarea");
+      disableElements.forEach(element => {
+        element.style.pointerEvents = "none";
+        element.style.opacity = "0.6";
+        element.disabled = true;
+      });
+      // Prevent click, keypress, and form submission
+      iframeDoc.addEventListener('click', e => e.preventDefault(), true);
+      iframeDoc.addEventListener('keydown', e => e.preventDefault(), true);
+      iframeDoc.addEventListener('submit', e => e.preventDefault(), true);
+    };
+  </script>
+</body>
+</html>
