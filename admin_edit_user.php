@@ -143,7 +143,7 @@ $conn->close();
     box-shadow:0 1px 3px rgba(0,0,0,0.1);
     margin-bottom:2rem;
 ">
-    <form action="edit_user.php?id=<?php echo $user_id; ?>" method="POST" style="display:flex; flex-direction:column; gap:1rem;">
+    <form action="admin_edit_user.php?id=<?php echo $user_id; ?>" method="POST" style="display:flex; flex-direction:column; gap:1rem;">
         <!-- Hidden ID field -->
         <input type="hidden" name="user_id" value="<?php echo $user_id; ?>">
 
