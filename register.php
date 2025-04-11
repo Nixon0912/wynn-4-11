@@ -74,40 +74,59 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
              $stmt_check->execute();
              $stmt_check->store_result();
              if ($stmt_check->num_rows > 0) {
-                 $error_message = "❌ Email or a similar username already exists.";
+                 $error_message = "❌ Email or username already exists.";
              }
              $stmt_check->close();
         } else {
              $error_message = "❌ Error checking existing user: " . $conn->error;
         }
 
-
         // Proceed only if no error message so far (including uniqueness check)
         if ($error_message === null) {
-            // Prepare SQL INSERT statement (Removed Identity_Number, Phone_Number)
+            // Prepare SQL INSERT statement for user_file (Removed Identity_Number, Phone_Number)
             $sql = "INSERT INTO user_file (User_Login_Name, Password, Real_Name, Gender, Email, Add_Time)
                     VALUES (?, ?, ?, ?, ?, NOW())";
             $stmt = $conn->prepare($sql);
 
             if ($stmt) {
-                // Bind parameters (Update types string from "sssssss" to "sssss")
+                // Bind parameters
                 $stmt->bind_param("sssss", $user_login_name, $hashed_password, $real_name, $gender, $email);
 
                 if ($stmt->execute()) {
-                    // Set session variable or handle success as needed
-                    // $_SESSION["registered_user"] = $user_login_name; // Example
-                    $success_message = "✅ Registration successful! You can now login.";
-                    // Optionally clear form fields or redirect
-                    // header("Location: login.php");
-                    // exit();
+                  // Registration into user_file successful.
+                  // Retrieve the newly inserted user id.
+                  $new_user_id = $conn->insert_id;
+              
+                  // Insert a default record into user_dashboard_preferences for this new user.
+                  // The column is now a text (or MySQL SET) field expecting a comma-separated list.
+                  // We auto-select the default three chart types.
+                  $default_chart_types = "line,bar,polar"; // Defaults: auto-select "line", "bar", and "polar"
+                  $default_timeframe = 'weekly';
+                  $sql_pref = "INSERT INTO user_dashboard_preferences (User_ID, visible_chart_types, data_timeframe) VALUES (?, ?, ?)";
+                  $stmt_pref = $conn->prepare($sql_pref);
+                  if ($stmt_pref) {
+                      // "i" for integer, "ss" for the two string values.
+                      $stmt_pref->bind_param("iss", $new_user_id, $default_chart_types, $default_timeframe);
+                      if (!$stmt_pref->execute()) {
+                          error_log("Failed to insert default dashboard preferences for user ID $new_user_id: " . $stmt_pref->error);
+                      }
+                      $stmt_pref->close();
+                  } else {
+                      error_log("Failed to prepare dashboard preferences insert for user ID $new_user_id: " . $conn->error);
+                  }
+              
+                  $success_message = "✅ Registration successful! You can now login.";
+                  // Optionally clear form fields or redirect.
+                  // header("Location: login.php");
+                  // exit();
                 } else {
                     // Log detailed error for admin, show generic message to user
                     error_log("Registration failed for email $email: " . $stmt->error);
                     $error_message = "❌ Registration failed. Please try again later.";
-                    // Check for specific errors like duplicate entry if uniqueness check wasn't done/failed
-                     if ($conn->errno == 1062) { // Error code for duplicate entry
+                    // Check for duplicate entry
+                    if ($conn->errno == 1062) { // Error code for duplicate entry
                          $error_message = "❌ This email or username is already registered.";
-                     }
+                    }
                 }
                 $stmt->close();
             } else {
@@ -134,31 +153,29 @@ $conn->close();
     header { background-color: #0A74DA; color: white; padding: 1rem; text-align: center; }
     nav { display: flex; justify-content: center; gap: 1.5rem; margin-top: 0.5rem; }
     nav a { color: white; text-decoration: none; font-weight: bold; }
-    main { display: flex; justify-content: center; align-items: center; padding: 2rem 1rem; /* Add padding */ min-height: calc(100vh - 150px); /* Adjust height considering header/footer */ }
+    main { display: flex; justify-content: center; align-items: center; padding: 2rem 1rem; min-height: calc(100vh - 150px); }
     .register-container { background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); width: 100%; max-width: 450px; }
     h2 { color: #0A74DA; margin-bottom: 1.5rem; text-align: center; }
     .form-group { margin-bottom: 1rem; }
     label { font-weight: bold; display: block; margin-bottom: 0.3rem; }
-    input, select { width: 100%; padding: 0.6rem; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; /* Include padding in width */ }
-    /* Style for placeholders */
-    ::placeholder { color: #aaa; opacity: 1; /* Firefox */ }
-    :-ms-input-placeholder { color: #aaa; } /* Internet Explorer 10-11 */
-    ::-ms-input-placeholder { color: #aaa; } /* Microsoft Edge */
-
+    input, select { width: 100%; padding: 0.6rem; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+    ::placeholder { color: #aaa; opacity: 1; }
+    :-ms-input-placeholder { color: #aaa; }
+    ::-ms-input-placeholder { color: #aaa; }
     button { width: 100%; background-color: #0A74DA; color: white; padding: 0.7rem; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 1rem; }
     button:hover { background-color: #084a9a; }
-    .message { margin-bottom: 1rem; /* Display message above form fields */ padding: 0.7rem; border-radius: 5px; text-align: center; }
-    .error-message { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;}
-    .success-message { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb;}
-    footer { background-color: #f0f0f0; text-align: center; padding: 1rem; font-size: 0.9rem; margin-top: 2rem; /* Ensure spacing */ }
+    .message { margin-bottom: 1rem; padding: 0.7rem; border-radius: 5px; text-align: center; font-weight: bold; }
+    .error-message { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    .success-message { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    footer { background-color: #f0f0f0; text-align: center; padding: 1rem; font-size: 0.9rem; margin-top: 2rem; }
   </style>
 </head>
 <body>
   <header>
     <h1>Create your FinSight Account</h1>
     <nav>
-      <a href="index.html">Home</a> <!-- Adjust link if needed -->
-      <a href="login.php">Login</a>   <!-- Adjust link if needed -->
+      <a href="index.html">Home</a>
+      <a href="login.php">Login</a>
     </nav>
   </header>
 
@@ -173,10 +190,8 @@ $conn->close();
       <?php if ($success_message): ?>
         <div class="message success-message"><?php echo htmlspecialchars($success_message); ?></div>
         <!-- Optionally hide the form after success -->
-        <?php /* unset($_POST); // Clear POST data to prevent resubmission issues */ ?>
-      <?php else: // Only show the form if there's no success message ?>
-
-      <form method="POST" action="register.php" novalidate> <!-- novalidate disables browser validation to rely on server-side -->
+      <?php else: ?>
+      <form method="POST" action="register.php" novalidate>
         <div class="form-group">
           <label for="first-name">First Name:</label>
           <input type="text" id="first-name" name="first_name" placeholder="e.g., John" required value="<?php echo htmlspecialchars($_POST['first_name'] ?? ''); ?>">
@@ -195,7 +210,6 @@ $conn->close();
         <div class="form-group">
           <label for="password">Password:</label>
           <input type="password" id="password" name="password" placeholder="Min. 8 characters, 1 uppercase" required>
-          <!-- Add password requirements hint -->
           <small style="display: block; margin-top: 4px; color: #666;">Must be at least 8 characters long and include one uppercase letter.</small>
         </div>
 
@@ -211,22 +225,19 @@ $conn->close();
             <option value="Male" <?php echo (($_POST['gender'] ?? '') === 'Male') ? 'selected' : ''; ?>>Male</option>
             <option value="Female" <?php echo (($_POST['gender'] ?? '') === 'Female') ? 'selected' : ''; ?>>Female</option>
             <option value="Other" <?php echo (($_POST['gender'] ?? '') === 'Other') ? 'selected' : ''; ?>>Other</option>
-             <option value="Prefer not to say" <?php echo (($_POST['gender'] ?? '') === 'Prefer not to say') ? 'selected' : ''; ?>>Prefer not to say</option> <!-- Added option -->
+            <option value="Prefer not to say" <?php echo (($_POST['gender'] ?? '') === 'Prefer not to say') ? 'selected' : ''; ?>>Prefer not to say</option>
           </select>
         </div>
 
-        <!-- Identity Number field REMOVED -->
-        <!-- Phone Number field REMOVED -->
-
         <button type="submit">Register</button>
       </form>
-      <?php endif; // End of the 'else' block for showing the form ?>
+      <?php endif; ?>
 
     </div>
   </main>
 
   <footer>
-    <p>© <?php echo date("Y"); ?> FinSight. All rights reserved.</p> <!-- Dynamic year -->
+    <p>© <?php echo date("Y"); ?> FinSight. All rights reserved.</p>
   </footer>
 
 </body>

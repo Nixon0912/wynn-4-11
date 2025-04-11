@@ -76,6 +76,11 @@ if ($result && $result->num_rows > 0) {
 
 <h1>Manage Users</h1>
 
+<div style="display: flex; justify-content: flex-end; margin-bottom: 1rem;">
+  <input type="text" id="userSearch" placeholder="🔍 Search by ID, name, or email..." style="padding: 0.5rem 1rem; border-radius: 4px; border: 1px solid #ccc; width: 280px;">
+</div>
+
+
 <?php if ($message): ?>
     <div class="message <?php echo $message_type; ?>"><?php echo htmlspecialchars($message); ?></div>
 <?php endif; ?>
@@ -117,3 +122,19 @@ if ($result && $result->num_rows > 0) {
 </table>
 
 <?php require_once 'admin_footer.php'; ?>
+
+<script>
+document.getElementById('userSearch').addEventListener('input', function () {
+  const keyword = this.value.trim().toLowerCase();
+  const rows = document.querySelectorAll('tbody tr');
+
+  rows.forEach(row => {
+    const id = row.children[0]?.textContent.trim().toLowerCase() || '';
+    const name = row.children[1]?.textContent.trim().toLowerCase() || '';
+    const email = row.children[2]?.textContent.trim().toLowerCase() || '';
+
+    const match = id.includes(keyword) || name.includes(keyword) || email.includes(keyword);
+    row.style.display = match ? '' : 'none';
+  });
+});
+</script>

@@ -20,7 +20,7 @@ OUTPUT_FILES_TO_CLEAN = [
 ]
 
 # --- Scraping Settings ---
-SCRAPER_INPUT_URL = "https://tophub.today/c/finance"
+SCRAPER_INPUT_URL = "https://tophub.today/c/finance?&p=3"
 SELENIUM_TIMEOUT = 10
 MAX_WORKERS_CONTENT_SCRAPE = os.cpu_count() or 8
 

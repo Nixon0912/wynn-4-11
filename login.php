@@ -1,9 +1,10 @@
 <?php
+
 session_start();
 
-error_reporting(0);
-ini_set('display_errors', 0);
-
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
 $conn = new mysqli("localhost", "root", "", "wynn_fyp");
 if ($conn->connect_error) die("Database connection failed");
@@ -12,7 +13,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = trim($_POST["email"]);
     $password = trim($_POST["password"]);
     
-    $sql = "SELECT User_ID, Password FROM user_file WHERE Email = ?";
+    $sql = "SELECT User_ID, User_Login_Name, Password FROM user_file WHERE Email = ?";
     $stmt = $conn->prepare($sql);
     if (!$stmt) die("Database error");
     
@@ -22,16 +23,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $stmt->store_result();
     
     if ($stmt->num_rows > 0) {
-        $stmt->bind_result($user_id, $hashed_password);
-        $stmt->fetch();
+        $stmt->bind_result($user_id, $user_login_name, $hashed_password);
+        $stmt->fetch();        
         
         if (password_verify($password, $hashed_password)) {
             $_SESSION["user_id"] = $user_id;
             $_SESSION["logged_in"] = true;
             $_SESSION["email"] = $email;
+            $_SESSION["user_login_name"] = $user_login_name; 
             
-            // 确保没有任何输出 before this
-            header("Location: dashboard.html");
+            header("Location: dashboard.php?user_id=" . $user_id);
             exit();
         } else {
             $error_message = "Invalid password";

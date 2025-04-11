@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FinSight Help Center</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: #f8f9fb;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+    }
+
+    .header {
+      background: linear-gradient(to right, #007bff, #0056b3);
+      color: white;
+      padding: 1.5rem;
+      text-align: center;
+      font-size: 1.8rem;
+      font-weight: bold;
+      letter-spacing: 0.5px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 40px auto;
+      background: white;
+      border-radius: 10px;
+      padding: 2.5rem;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+      text-align: center;
+    }
+
+    .description {
+      font-size: 1.1rem;
+      margin-bottom: 2rem;
+      color: #555;
+    }
+
+    .button-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1rem;
+    }
+
+    .button {
+      flex: 1 1 250px;
+      margin: 0.5rem;
+      padding: 1rem 2rem;
+      background-color: #007bff;
+      color: white;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 1rem;
+      border-radius: 6px;
+      box-shadow: 0 3px 8px rgba(0, 123, 255, 0.3);
+      transition: background-color 0.25s ease;
+    }
+
+    .button:hover {
+      background-color: #004b99;
+    }
+
+    .back-link {
+      display: block;
+      margin-top: 2.5rem;
+      font-size: 0.95rem;
+      color: #6c757d;
+      cursor: pointer;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">FinSight Help Center</div>
+
+  <div class="container">
+    <p class="description">Need assistance? Use the links below to navigate to essential tools and features:</p>
+
+    <div class="button-grid">
+      <a href="" class="button">🛠️ Dashboard Customization</a>
+      <a href="" class="button">📈 Trending Topics</a>
+      <a href="" class="button">📄 Download Report</a>
+      <a href="" class="button">📝 Register</a>
+      <a href="" class="button">🔐 Login</a>
+      <a href="" class="button">🚪 Logout</a>
+    </div>
+
+    <span class="back-link" onclick="history.back()">← Back to Previous Page</span>
+  </div>
+
+</body>
+</html>
