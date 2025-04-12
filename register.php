@@ -100,13 +100,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                   // Insert a default record into user_dashboard_preferences for this new user.
                   // The column is now a text (or MySQL SET) field expecting a comma-separated list.
                   // We auto-select the default three chart types.
-                  $default_chart_types = "line,bar,polar"; // Defaults: auto-select "line", "bar", and "polar"
-                  $default_timeframe = 'weekly';
-                  $sql_pref = "INSERT INTO user_dashboard_preferences (User_ID, visible_chart_types, data_timeframe) VALUES (?, ?, ?)";
+                  $default_chart_types = "line"; // Defaults: auto-select "line", "bar", and "polar"
+                  $sql_pref = "INSERT INTO user_dashboard_preferences (User_ID, visible_chart_types) VALUES (?, ?)";
                   $stmt_pref = $conn->prepare($sql_pref);
                   if ($stmt_pref) {
                       // "i" for integer, "ss" for the two string values.
-                      $stmt_pref->bind_param("iss", $new_user_id, $default_chart_types, $default_timeframe);
+                      $stmt_pref->bind_param("is", $new_user_id, $default_chart_types);
                       if (!$stmt_pref->execute()) {
                           error_log("Failed to insert default dashboard preferences for user ID $new_user_id: " . $stmt_pref->error);
                       }

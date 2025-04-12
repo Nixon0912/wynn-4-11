@@ -14,9 +14,8 @@ if (!$user_id) {
 }
 
 // Retrieve preferences from the form.
-// Use the correct input names: 'chart_types[]' and 'data_timeframe'
+// Use the correct input names: 'chart_types[]'
 $chart_types = $_POST['chart_types'] ?? [];  // This is an array of selected chart types.
-$data_timeframe = $_POST['data_timeframe'] ?? 'monthly';  // Default value if not provided.
 
 // Convert the chart_types array to a comma-separated string.
 $chart_types_str = implode(',', $chart_types);
@@ -33,13 +32,12 @@ if ($conn->connect_error) {
 }
 
 // Insert or update the user's preferences.
-// Use the correct column names: visible_chart_types and data_timeframe.
+// Use the correct column names: visible_chart_types
 $sql = "
-    INSERT INTO user_dashboard_preferences (User_ID, visible_chart_types, data_timeframe)
-    VALUES (?, ?, ?)
+    INSERT INTO user_dashboard_preferences (User_ID, visible_chart_types)
+    VALUES (?, ?)
     ON DUPLICATE KEY UPDATE 
         visible_chart_types = VALUES(visible_chart_types),
-        data_timeframe = VALUES(data_timeframe),
         updated_at   = NOW()
 ";
 
@@ -47,7 +45,7 @@ $stmt = $conn->prepare($sql);
 if (!$stmt) {
     die("Error preparing statement: " . $conn->error);
 }
-$stmt->bind_param("iss", $user_id, $chart_types_str, $data_timeframe);
+$stmt->bind_param("is", $user_id, $chart_types_str);
 $stmt->execute();
 
 if ($stmt->error) {

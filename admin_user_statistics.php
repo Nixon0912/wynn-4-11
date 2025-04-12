@@ -3,6 +3,9 @@ $pageTitle = "User Statistics";
 require_once 'admin_header.php';
 require_once 'admin_db_connect.php';
 
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
 // --- 1. User Growth: Monthly Registrations ---
 $monthly_growth = [];
@@ -17,26 +20,13 @@ if ($result_growth) {
     }
 }
 
-// --- 2. Interest Category Distribution ---
-$interest_stats = [];
-$sql_interests = "SELECT Interest_Category, COUNT(*) as count
-                  FROM user_interest_file
-                  WHERE Interest_Category IS NOT NULL AND Interest_Category != ''
-                  GROUP BY Interest_Category
-                  ORDER BY count DESC";
-$result_interests = $conn->query($sql_interests);
-if ($result_interests) {
-    while ($row = $result_interests->fetch_assoc()) {
-        $interest_stats[] = $row;
-    }
-}
 
-$conn->close();
+
 ?>
 
 <h1>User Statistics</h1>
 
-<div class="message notice"><?php echo $stats_message; ?></div>
+
 
 <!-- 1. User Growth Over Time -->
 <h2>User Growth Over Time</h2>
@@ -61,28 +51,7 @@ $conn->close();
     </tbody>
 </table>
 
-<!-- 3. User Interests -->
-<h2 style="margin-top: 5rem;">User Interest Distribution</h2>
-<?php if (!empty($interest_stats)): ?>
-    <table>
-        <thead>
-            <tr>
-                <th>Interest Category</th>
-                <th>Number of Users</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php foreach ($interest_stats as $stat): ?>
-                <tr>
-                    <td><?php echo htmlspecialchars($stat['Interest_Category']); ?></td>
-                    <td><?php echo htmlspecialchars($stat['count']); ?></td>
-                </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
-<?php else: ?>
-    <p>No user interest data found or unable to fetch statistics.</p>
-<?php endif; ?>
+
 
 <!-- Chart.js for Growth Chart -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

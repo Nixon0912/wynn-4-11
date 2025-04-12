@@ -20,12 +20,15 @@ OUTPUT_FILES_TO_CLEAN = [
 ]
 
 # --- Scraping Settings ---
-SCRAPER_INPUT_URL = "https://tophub.today/c/finance?&p=3"
+SCRAPER_INPUT_URL = "https://tophub.today/c/finance?&p=1"
+SCRAPER_PAGES = [1]  # Added: pages to scrape
 SELENIUM_TIMEOUT = 10
 MAX_WORKERS_CONTENT_SCRAPE = os.cpu_count() or 8
+# Add this line for User-Agent
+USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36" # Example User Agent
 
 # --- Filtering Settings ---
-EXCLUDED_DOMAINS = {"tophub.today", "tophubdata.com"}
+EXCLUDED_DOMAINS = {"tophub.today", "tophubdata.com","cbndata.com/report","xueqiu.com","www.yicai.com/video","www.time-weekly.com"}
 
 # --- Data Cleaning Settings (Mistral) ---
 # Used by data_cleaner.py
@@ -39,12 +42,13 @@ MISTRAL_API_TIMEOUT = 2.5 # Seconds between calls for Mistral
 
 MISTRAL_CLEANING_PROMPT = (
     "[角色设定:你是一个专业处理中文网页内容的AI助手，擅长精准提取核心信息]"
-    "[任务指令:请对输入的中文网页文本执行以下操作: **首先，识别并提取文章的原始标题.** 接着, 过滤无用信息, 完全忽略网站名称、导航栏标题、广告标语、版权声明、装饰性文字等非实质内容, "
+    "[任务指令:请对输入的中文网页文本执行以下操作: **首先，识别并提取文章的原始标题.** 接着, 过滤无用信息, 完全忽略网站名称、导航栏标题、广告标语、版权声明、装饰性文字等非实质内容, 严格删除所有用户评论、留言、回复、点赞计数等互动内容。彻底移除页眉、页脚、导航菜单、侧边栏链接、广告标语和图片描述。最终输出绝不能包含'评论'、'回复'、'发表于'、'阅读数'等非文章正文字符串。"
     "自动识别并聚焦于核心主题相关的实质性内容（如新闻事件、数据图表、专业分析、政策解读等)生成摘要, 用中文输出结构清晰的简要总结，保留关键信息（时间、地点、人物、数据、核心观点),"
     "合并分散的相关段落，确保逻辑连贯性,摘要长度控制在原文核心内容的~50%。**最终输出时，请将提取到的标题放在摘要内容之前，并用换行符分隔。** 执行规则]"
-    "如果您无法访问该内容，或者该内容与财务无关，则返回“Cannot access”作为内容"
+    "如果您无法访问该内容，或者该内容与财务无关，则返回\"Cannot access\"作为内容"  # 转义内部双引号
     "[当遇到评论区内容时：仅保留直接补充核心事件的深度分析或重要背景信息, 当原文存在多个关联事件时：按逻辑顺序分点总结, 禁止添加任何推测性内容或网站原始文本未提及的信息]:\n\n{text}"
 )
+
 
 # Phrases indicating failure or irrelevance in cleaned content, used for post-processing deletion
 # Used by both NMF(old) and Gemini pipelines before processing files
@@ -92,7 +96,7 @@ GEMINI_FILTER_ERROR_PHRASES = { # Use set for faster lookup
     "API错误", "无法访问", "无法生成标签", "内容不足",
     "ERROR_GENERATING_TAGS", "Failed to generate tags",
     "网络错误", "请求超时", "BLOCKED",
-    "ERROR_PROCESSING_FILE", "内容缺失", "付费内容订阅"
+    "ERROR_PROCESSING_FILE", "内容缺失", "付费内容订阅", "二维码"
 }
 
 # Specific phrases to remove from the generated TAG LIST (row is kept unless it also has error)
@@ -112,7 +116,7 @@ GEMINI_TAGGING_PROMPT_TEMPLATE = """
 **任务指令:** 请仔细阅读以下提供的文章内容，并为其生成一系列简洁、有意义的短语标签（类似社交媒体的hashtags）。
 **输出要求:**
 1.  **核心主题:** 标签应准确反映文章讨论的核心概念、事件、实体或趋势。
-2.  **短语优先:** **极其重要** - 优先生成有意义的短语。例如，如果文章讨论“加征关税”，请生成“加征关税”标签，而不是单独的“加征”和“关税”。只有当单个词本身代表一个非常具体、独立的概念（如“特斯拉”、“一带一路”）时，才使用单个词。
+2.  **短语优先:** **极其重要** - 优先生成有意义的短语。例如，如果文章讨论"加征关税"，请生成"加征关税"标签，而不是单独的"加征"和"关税"。只有当单个词本身代表一个非常具体、独立的概念（如"特斯拉"、"一带一路"）时，才使用单个词。
 3.  **数量:** 生成 {min_tags} 到 {max_tags} 个标签。
 4.  **语言:** 所有标签必须使用 **简体中文**。
 5.  **格式:** **仅输出** 一个由逗号分隔的标签列表 (comma-separated list)。**绝对不要**包含任何介绍性文字、解释、编号、项目符号或任何标签本身以外的内容。输出的第一个字符就应该是第一个标签的第一个字。
@@ -147,11 +151,11 @@ REPORT_PROMPT_TEMPLATE = """
 **极其重要的最终指示 (必须严格遵守):**
 
 1.  **输出形式与结构:**
-    *   报告 **最多包含 7 个** 由 **“小标题 + 分析段落”** 构成的组合。**严格遵守此数量上限。**
+    *   报告 **最多包含 7 个** 由 **"小标题 + 分析段落"** 构成的组合。**严格遵守此数量上限。**
     *   **每个分析段落前必须有一个单独占行的小标题**。
     *   小标题应 **简洁且信息丰富**，准确概括其后段落的核心内容。**小标题格式示例：** `**小标题文本**` （如果无法加粗，则使用普通文本）。
     *   小标题行之后紧接着是对应的 **纯文本分析段落**。
-    *   每个 **“小标题 + 段落”** 组合之间用 **一个空行** 分隔。
+    *   每个 **"小标题 + 段落"** 组合之间用 **一个空行** 分隔。
     *   **这是唯一的输出形式**。
 
 2.  **内容要求:**
@@ -161,7 +165,7 @@ REPORT_PROMPT_TEMPLATE = """
     *   所有分析内容组织成 **内容丰富、逻辑连贯、论述充分** 的段落流，**并确保各分析段落的长度大致均衡（例如，每段控制在相似的句子数量或字数范围内，避免出现过长或过短的段落）**，同时均配有对应小标题。
     *   语言专业、客观、流畅，并且 **详尽具体**。
     *   **优先关注或总结最新信息**（如果文本中有时间线索）。
-    *   **完全禁止** 包含任何形式的 **报告整体标题、章节标题（区别于段落小标题）**、介绍性语句（如“这是市场报告：”）、总结性语句（如“总之，”）、列表标记（如 *、-、1.）、格式标记（如 ```` ```），或者任何 **非小标题行或纯粹分析段落本身** 的内容。
+    *   **完全禁止** 包含任何形式的 **报告整体标题、章节标题（区别于段落小标题）**、介绍性语句（如"这是市场报告："）、总结性语句（如"总之,"）、列表标记（如 *、-、1.）、格式标记（如 ``` ```），或者任何 **非小标题行或纯粹分析段落本身** 的内容。
     *   **绝对禁止** 包含任何关于 **你的指令或关于你正在生成报告这个事实** 的元文本。
 
 以下是新闻文章的合并内容：

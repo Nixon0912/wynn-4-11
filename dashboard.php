@@ -7,7 +7,6 @@ if (!isset($_SESSION["logged_in"]) || $_SESSION["logged_in"] !== true) {
     exit();
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -24,8 +23,8 @@ if (!isset($_SESSION["logged_in"]) || $_SESSION["logged_in"] !== true) {
     /* Header */
     header {
       display: flex;
-      flex-direction: column;  /* Stack title and nav vertically */
-      align-items: center;     /* Center horizontally */
+      flex-direction: column;
+      align-items: center;
       background: linear-gradient(135deg, #0A74DA 0%, #0570b8 100%);
       color: #fff;
       padding: 1rem 2rem;
@@ -35,12 +34,12 @@ if (!isset($_SESSION["logged_in"]) || $_SESSION["logged_in"] !== true) {
       font-weight: 600;
       letter-spacing: 1px;
       margin-bottom: 0.5rem;
-      text-align: center; /* Ensures the title text is centered */
+      text-align: center;
     }
     .header-nav {
       display: flex;
       gap: 15px;
-      justify-content: flex-end;  /* Align all navigation buttons to the right */
+      justify-content: flex-end;
       align-items: center;
       width: 100%;
     }
@@ -56,7 +55,6 @@ if (!isset($_SESSION["logged_in"]) || $_SESSION["logged_in"] !== true) {
     .header-nav a:hover {
       background-color: #065c9c;
     }
-    /* Removed margin-left auto from help-button */
     .header-nav a.help-button {
       background-color: #065c9c;
     }
@@ -69,7 +67,6 @@ if (!isset($_SESSION["logged_in"]) || $_SESSION["logged_in"] !== true) {
       width: 320px;
       height: calc(100vh - 80px);
       background-color: transparent;
-      border-right: transparent;
       padding: 1rem;
       overflow-y: auto;
     }
@@ -78,7 +75,6 @@ if (!isset($_SESSION["logged_in"]) || $_SESSION["logged_in"] !== true) {
       color: #0A74DA;
       font-size: 1.2rem;
     }
-    /* Instructional paragraph styling under Trending Topics */
     .sidebar p {
       font-size: 0.9rem;
       color: #555;
@@ -119,7 +115,7 @@ if (!isset($_SESSION["logged_in"]) || $_SESSION["logged_in"] !== true) {
     }
     /* Main Content */
     main.content {
-      margin-left: 280px; /* Leaves space for fixed sidebar */
+      margin-left: 280px;
       padding: 2rem;
       flex: 1;
       min-height: calc(100vh - 80px);
@@ -174,19 +170,22 @@ if (!isset($_SESSION["logged_in"]) || $_SESSION["logged_in"] !== true) {
     /* Charts Section */
     .charts-section {
       display: flex;
-      flex-wrap: wrap;
+      flex-direction: column;
       gap: 1rem;
       justify-content: center;
+      align-items: center;
     }
     .chart-container {
-      width: 1000px;
+      width: 100%;
+      max-width: 1000px;
       height: 600px;
       background-color: #fff;
       border-radius: 8px;
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
       padding: 1rem;
-      margin-bottom: 1rem;
       text-align: center;
+      position: relative;
+      margin-bottom: 1rem;
     }
     .chart-container h3 {
       margin-bottom: 0.5rem;
@@ -195,28 +194,6 @@ if (!isset($_SESSION["logged_in"]) || $_SESSION["logged_in"] !== true) {
     .chart-canvas {
       width: 100% !important;
       height: 90% !important;
-    }
-    /* Specific container for polar area */
-    .polar-area-container {
-      display: flex;
-      flex-direction: column;  /* Stack title and chart vertically */
-      justify-content: center;  /* Center contents vertically */
-      align-items: center;  /* Center contents horizontally */
-      width: 1000px;
-      height: 600px;
-      margin: 0 auto;
-      background-color: #fff;
-      border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      padding: 1rem;
-      text-align: center; /* Ensures text stays centered */
-    }
-    /* Ensure polar area canvas fills its container */
-    .polar-area-canvas {
-      width: 550px !important;
-      height: 500px !important;
-      align-self: center;
-      margin: auto;
     }
     /* Footer */
     footer {
@@ -228,17 +205,14 @@ if (!isset($_SESSION["logged_in"]) || $_SESSION["logged_in"] !== true) {
       border-top: 1px solid #ddd;
     }
   </style>
-
 </head>
 <body>
-
   <!-- Header -->
   <header>
     <h1>FinSight Dashboard</h1>
     <nav class="header-nav">
       <a href="customization.php">Dashboard Customization</a>
       <a href="logout.html">Logout</a>
-      <!-- Help button placed at the right side -->
       <a href="help.html" class="help-button">Help</a>
     </nav>
   </header>
@@ -247,8 +221,7 @@ if (!isset($_SESSION["logged_in"]) || $_SESSION["logged_in"] !== true) {
     <!-- Sidebar (Fixed) -->
     <aside class="sidebar">
       <h2>Trending Topics</h2>
-      <!-- Instructional paragraph added below Trending Topics -->
-      <p>Explore the articles and a summary by pressing the topics below.</p>
+      <p>Explore the articles and a summary by clicking the topics below.</p>
       <table>
         <thead>
           <tr>
@@ -277,17 +250,20 @@ if (!isset($_SESSION["logged_in"]) || $_SESSION["logged_in"] !== true) {
       </div>
       <!-- Charts Section -->
       <div class="charts-section">
-        <div class="chart-container">
-          <h3>Number of articles (monthly)</h3>
+        <!-- Line Chart: Weekly Trend (only topics with ≥100 articles) -->
+        <div class="chart-container" id="lineChartContainer">
+          <h3>Weekly Trend (≥ 10 Articles)</h3>
           <canvas id="lineChart" class="chart-canvas"></canvas>
         </div>
-        <div class="chart-container">
-          <h3>Distribution of articles</h3>
-          <canvas id="barChart" class="chart-canvas"></canvas>
+        <!-- Scatter Plot: Topic Hotness -->
+        <div class="chart-container" id="scatterChartContainer">
+          <h3>Topic Hotness Distribution</h3>
+          <canvas id="scatterChart" class="chart-canvas"></canvas>
         </div>
-        <div class="chart-container polar-area-container">
-          <h3>Polar Area: Distribution per Topic</h3>
-          <canvas id="polarArea" class="polar-area-canvas"></canvas>
+        <!-- Bar Chart: Daily Top Topic -->
+        <div class="chart-container" id="barChartContainer">
+          <h3>Daily Top Topic</h3>
+          <canvas id="barChart" class="chart-canvas"></canvas>
         </div>
       </div>
     </main>
@@ -296,160 +272,229 @@ if (!isset($_SESSION["logged_in"]) || $_SESSION["logged_in"] !== true) {
   <footer>
     <p>&copy; 2025 FinSight. All rights reserved.</p>
   </footer>
-  <!-- Include Chart.js v3.9.1 -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-  <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    // Fetch dashboard data
-    fetch('get_dashboard_data.php')
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log('Fetched Data:', data); // Debug: Log the fetched data
-
-            // Validate data structure
-            if (!data || !Array.isArray(data.trending_topics) || typeof data.total_articles !== 'number') {
-                throw new Error('Invalid data structure');
-            }
-
-            // Update trending topics table
-            const tbody = document.querySelector('#trending-topics-body');
-            tbody.innerHTML = data.trending_topics.map(topic => `
-                <tr>
-                    <td><a href="trending_topics.html?topic=${encodeURIComponent(topic.Topic)}" class="topic-link">${topic.Topic}</a></td>
-                    <td>${topic.article_count}</td>
-                </tr>
-            `).join('');
-
-            // Update articles tracked count
-            document.getElementById('articles-tracked').textContent = data.total_articles;
-
-            // Pass data to charts
-            updateLineChart(data.trending_topics.map(topic => topic.Topic), data.trending_topics.map(topic => topic.article_count));
-            updateBarChart(data.trending_topics.map(topic => topic.Topic), data.trending_topics.map(topic => topic.article_count));
-            updatePolarAreaChart(data.trending_topics.map(topic => topic.Topic), data.trending_topics.map(topic => topic.article_count));
-        })
-        .catch(error => {
-            console.error('Error fetching dashboard data:', error);
-            alert('Failed to load dashboard data. Please try again.');
-        });
-
-    // Line Chart
-    function updateLineChart(labels, data) {
-        const ctxLine = document.getElementById('lineChart').getContext('2d');
-        new Chart(ctxLine, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Articles per Topic',
-                    data: data,
-                    borderColor: '#0A74DA',
-                    backgroundColor: 'rgba(10, 116, 218, 0.2)',
-                    fill: true,
-                    tension: 0.1
-                }]
-            },
-            options: {
-                responsive: false,
-                maintainAspectRatio: false,
-                scales: { y: { beginAtZero: true } }
-            }
-        });
-    }
-
-    // Bar Chart
-    function updateBarChart(labels, data) {
-        const ctxBar = document.getElementById('barChart').getContext('2d');
-        new Chart(ctxBar, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{
-                    data: data,
-                    backgroundColor: ['#0A74DA', '#f39c12', '#2ecc71', '#e74c3c']
-                }]
-            },
-            options: {
-                responsive: false,
-                maintainAspectRatio: false,
-                scales: { y: { beginAtZero: true } },
-                plugins: { legend: { display: false } }
-            }
-        });
-    }
-
-    // Polar Area Chart
-    function updatePolarAreaChart(labels, data) {
-        const ctxPolar = document.getElementById('polarArea').getContext('2d');
-        new Chart(ctxPolar, {
-            type: 'polarArea',
-            data: {
-                labels: labels,
-                datasets: [{
-                    data: data,
-                    backgroundColor: ['#0A74DA', '#f39c12', '#2ecc71', '#e74c3c']
-                }]
-            },
-            options: {
-                responsive: false,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: true },
-                    title: { display: true, text: '' }
-                }
-            }
-        });
-    }
-  });
   
-  document.addEventListener("DOMContentLoaded", function () {
-    const urlParams = new URLSearchParams(window.location.search);
-    const userId = urlParams.get('user_id');
-    if (userId) {
-      console.log("User ID:", userId); // Debug: Log the User_ID
-      // Optionally, store the User_ID in local storage or perform additional actions
+  <!-- Include Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+  <!-- Include the Date Adapter for time scales -->
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+  
+  <script>
+    // Helper: generate a random color (for line chart series)
+    function getRandomColor() {
+      const letters = '0123456789ABCDEF';
+      let color = '#';
+      for(let i = 0; i < 6; i++){
+        color += letters[Math.floor(Math.random() * 16)];
+      }
+      return color;
     }
-  });
 
-  document.addEventListener("DOMContentLoaded", function () {
-    fetch('get_dashboard_data.php')
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
+    // Update Line Chart:
+    // topicTrends is an object { topic: [count_day1, ..., count_day7], ... }
+    // daysLabels is an array of 7 day strings.
+    function updateLineChart(daysLabels, topicTrends) {
+      const datasets = [];
+      const benchmark = 10;
+      Object.keys(topicTrends).forEach(topic => {
+        const counts = topicTrends[topic];
+        const total = counts.reduce((sum, count) => sum + count, 0);
+        if (total >= benchmark) {
+          datasets.push({
+            label: topic,
+            data: counts,
+            borderColor: getRandomColor(),
+            backgroundColor: 'rgba(0,0,0,0)',
+            tension: 0.1
+          });
+        }
+      });
+      if (datasets.length === 0) {
+        document.getElementById('lineChartContainer').innerHTML = "<p>No topics meet the benchmark of " + benchmark + " articles.</p>";
+        return;
+      }
+      const ctxLine = document.getElementById('lineChart').getContext('2d');
+      new Chart(ctxLine, {
+        type: 'line',
+        data: {
+          labels: daysLabels,
+          datasets: datasets
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { beginAtZero: true, title: { display: true, text: '# Articles' } },
+            x: { title: { display: true, text: 'Day' } }
+          }
+        }
+      });
+    }
+
+    // Update Scatter Chart:
+    // For each topic in topicTrends, compute the day where it peaked.
+    // Each data point is {x: peakDay, y: peakCount, label: topic}.
+    function updateScatterChart(daysLabels, topicTrends) {
+      const dataPoints = [];
+      Object.keys(topicTrends).forEach(topic => {
+        const counts = topicTrends[topic];
+        let maxCount = Math.max(...counts);
+        let peakIndex = counts.indexOf(maxCount);
+        let peakDay = daysLabels[peakIndex];
+        
+        // Color coding based on the peak count (adjust thresholds as needed)
+        let pointColor = '#95a5a6'; // default
+        if (maxCount >= 10 && maxCount <= 20) {
+          pointColor = '#3498db';
+        } else if (maxCount >= 50 && maxCount <= 60) {
+          pointColor = '#f1c40f';
+        } else if (maxCount > 100) {
+          pointColor = '#e74c3c';
+        }
+        dataPoints.push({
+          x: peakDay,
+          y: maxCount,
+          label: topic,
+          backgroundColor: pointColor
+        });
+      });
+      const ctxScatter = document.getElementById('scatterChart').getContext('2d');
+      new Chart(ctxScatter, {
+        type: 'scatter',
+        data: {
+          datasets: [{
+            label: 'Topic Hotness',
+            data: dataPoints,
+            pointRadius: 6,
+            pointHoverRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: {
+              type: 'time',
+              time: { unit: 'day' },
+              title: { display: true, text: 'Day' }
+            },
+            y: {
+              beginAtZero: true,
+              title: { display: true, text: '# Articles' }
             }
-            return response.json();
+          },
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  let label = context.raw.label || '';
+                  return label + ': ' + context.parsed.y + ' articles on ' + context.raw.x;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // Update Bar Chart:
+    // Uses daily_top_topic data (an array of objects: {day, topic, count})
+    function updateBarChart(labels, data, topTopics) {
+      const ctxBar = document.getElementById('barChart').getContext('2d');
+      new Chart(ctxBar, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Daily Top Topic',
+            data: data,
+            backgroundColor: ['#0A74DA', '#f39c12', '#2ecc71', '#e74c3c', '#9b59b6', '#34495e', '#16a085']
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { beginAtZero: true, title: { display: true, text: '# Articles' } },
+            x: { title: { display: true, text: 'Day' } }
+          },
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  let index = context.dataIndex;
+                  let topic = topTopics[index] || '';
+                  return topic + ': ' + context.parsed.y + ' articles';
+                }
+              }
+            },
+            legend: { display: false }
+          }
+        }
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      fetch('get_dashboard_data.php')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
         })
         .then(data => {
-            console.log('Fetched Data:', data);
-            // Existing processing for trending topics and charts here...
-
-            // Check and display user preferences if available.
-            if (data.user_preferences) {
-                // You may need to adjust the text if your preferences are stored as comma‑separated strings.
-                const preferencesDiv = document.getElementById('userPreferences');
-                preferencesDiv.innerHTML = `
-                    <strong>Your Dashboard Preferences:</strong><br>
-                    Visible Chart Types: ${data.user_preferences.visible_chart_types}<br>
-                    Data Time Frame: ${data.user_preferences.data_timeframe}
-                `;
+          console.log('Fetched Data:', data);
+          // Validate data structure
+          if (!data || !Array.isArray(data.trending_topics) || typeof data.total_articles !== 'number') {
+            throw new Error('Invalid data structure');
+          }
+          // Update Sidebar Trending Topics
+          const tbody = document.querySelector('#trending-topics-body');
+          tbody.innerHTML = data.trending_topics.map(topic => `
+            <tr>
+              <td><a href="trending_topics.html?topic=${encodeURIComponent(topic.Topic)}" class="topic-link">${topic.Topic}</a></td>
+              <td>${topic.article_count}</td>
+            </tr>
+          `).join('');
+          // Update Articles Count and Last Update Time
+          document.getElementById('articles-tracked').textContent = data.total_articles;
+          document.getElementById('lastUpdate').textContent = 'Last updated: ' + data.last_update_time;
+          
+          // Retrieve chart data from backend
+          const daysLabels = data.chart_data.days_labels;           // Array of 7 day strings
+          const topicTrends = data.chart_data.topic_trends;           // Object: { topic: [count_day1,...,count_day7], ... }
+          const dailyTop = data.chart_data.daily_top_topic;           // Array of objects: { day, topic, count }
+          
+          // Prepare bar chart arrays
+          const barLabels = dailyTop.map(item => item.day);
+          const barData = dailyTop.map(item => item.count);
+          const topTopics = dailyTop.map(item => item.topic);
+          
+          // Render charts
+          updateLineChart(daysLabels, topicTrends);
+          updateScatterChart(daysLabels, topicTrends);
+          updateBarChart(barLabels, barData, topTopics);
+          
+          // Check user preferences for visible chart types, if provided
+          if (data.user_preferences && data.user_preferences.visible_chart_types) {
+            const visibleCharts = data.user_preferences.visible_chart_types.split(',').map(item => item.trim().toLowerCase());
+            if (!visibleCharts.includes('line')) {
+              document.getElementById('lineChartContainer').style.display = 'none';
             }
+            if (!visibleCharts.includes('scatter')) {
+              document.getElementById('scatterChartContainer').style.display = 'none';
+            }
+            if (!visibleCharts.includes('bar')) {
+              document.getElementById('barChartContainer').style.display = 'none';
+            }
+          }
         })
         .catch(error => {
-            console.error('Error fetching dashboard data:', error);
-            alert('Failed to load dashboard data. Please try again.');
+          console.error('Error fetching dashboard data:', error);
+          alert('Failed to load dashboard data. Please try again.');
         });
-});
-
-
+    });
   </script>
-<div id="userPreferences" style="margin: 20px; text-align: center;"></div>
-
+  <!-- Optionally show user preferences -->
+  <div id="userPreferences" style="margin: 20px; text-align: center;"></div>
 </body>
 </html>
-
-

@@ -237,7 +237,7 @@ if (!empty($topic)) {
           <?php endif; ?>
       </div>
       <div class="top-buttons">
-          <a href="dashboard.html" class="btn">Back to Dashboard</a>
+          <a href="dashboard.php" class="btn">Back to Dashboard</a>
           <a href="<?php echo $download_link; ?>" class="btn" <?php if (!$report_found) echo 'style="display:none;"';?> >Download Report</a>
           <a href="logout.php" class="btn">Logout</a>
       </div>

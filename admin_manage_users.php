@@ -105,7 +105,6 @@ if ($result && $result->num_rows > 0) {
                     <td><?php echo date('Y-m-d H:i', strtotime($user['Add_Time'])); ?></td>
                     <td>
                         <a href="admin_edit_user.php?id=<?php echo $user['User_ID']; ?>" class="edit-btn">Edit Info</a>
-                        <a href="admin_edit_user_preferences.php?id=<?php echo $user['User_ID']; ?>" class="prefs-btn">Edit Prefs</a>
                         <form action="admin_manage_users.php" method="post" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete user <?php echo htmlspecialchars($user['User_Login_Name']); ?>? This action cannot be undone.');">
                             <input type="hidden" name="user_id" value="<?php echo $user['User_ID']; ?>">
                             <button type="submit" name="delete_user" class="delete-btn">Delete</button>

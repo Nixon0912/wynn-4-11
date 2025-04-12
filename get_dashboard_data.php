@@ -1,84 +1,136 @@
 <?php
-// Start the session at the top of the file.
 session_start();
+header('Content-Type: application/json');
 
-// Check if the user is logged in.
-// If not, return a JSON error message and stop processing.
-if (!isset($_SESSION["logged_in"]) || $_SESSION["logged_in"] !== true) {
-    die(json_encode(['error' => 'User not logged in.']));
-}
-
-// Database configuration
-$servername = "localhost";  // Define the server name
-$username = "root";         // Replace with your database username if different
-$password = "";             // Replace with your database password if different
+$servername = "localhost";
+$username = "root";
+$password = "";
 $dbname = "wynn_fyp";
+$days_to_track = 7;
+$top_n_topics = 10;
 
-// Create a connection to the database
 $conn = new mysqli($servername, $username, $password, $dbname);
-
-// Check for a connection error
 if ($conn->connect_error) {
-    die(json_encode(['error' => 'Connection failed: ' . $conn->connect_error]));
+    http_response_code(500);
+    die(json_encode(['error' => 'Database connection failed: ' . $conn->connect_error]));
 }
+$conn->set_charset("utf8mb4");
 
-// --- Fetch trending topics and total articles ---
-$sql = "SELECT Title, Content FROM topics_file";
-$result = $conn->query($sql);
+$date_limit = date('Y-m-d', strtotime("-{$days_to_track} days + 1 day"));
 
-$trendingTopics = [];
+$all_topic_counts = [];
+$daily_topic_counts = [];
 $totalArticles = 0;
+$period_dates_full = [];
+for ($i = 0; $i < $days_to_track; $i++) {
+    $period_dates_full[] = date('Y-m-d', strtotime("-$i days"));
+}
+$period_dates_full = array_reverse($period_dates_full); // Oldest to newest
 
-if ($result && $result->num_rows > 0) {
+$sql = "SELECT Content, DATE(created_time) as article_date FROM topics_file WHERE created_time >= ?";
+$stmt = $conn->prepare($sql);
+if (!$stmt) {
+    http_response_code(500);
+    die(json_encode(['error' => 'SQL prepare failed: ' . $conn->error]));
+}
+$stmt->bind_param("s", $date_limit);
+$stmt->execute();
+$result = $stmt->get_result();
+
+if ($result) {
     while ($row = $result->fetch_assoc()) {
-        // Aggregate word counts using the comma-delimited keywords in Content field.
-        $words = explode(',', $row['Content']);
-        foreach ($words as $word) {
-            $word = trim($word); // Remove extra spaces
-            if (!empty($word)) {
-                $trendingTopics[$word] = ($trendingTopics[$word] ?? 0) + 1;
+        $totalArticles++;
+        $current_date = $row['article_date'];
+        if (!isset($daily_topic_counts[$current_date])) {
+            $daily_topic_counts[$current_date] = [];
+        }
+        $keywords = explode(',', $row['Content'] ?? '');
+        foreach ($keywords as $keyword) {
+            $keyword = trim($keyword);
+            if (!empty($keyword)) {
+                $all_topic_counts[$keyword] = ($all_topic_counts[$keyword] ?? 0) + 1;
+                $daily_topic_counts[$current_date][$keyword] = ($daily_topic_counts[$current_date][$keyword] ?? 0) + 1;
             }
         }
-        // Count total articles
-        $totalArticles++;
+    }
+    $stmt->close();
+} else {
+    http_response_code(500);
+    die(json_encode(['error' => 'SQL execute failed: ' . $stmt->error]));
+}
+
+// Sidebar Trending Topics: Top N overall topics
+arsort($all_topic_counts);
+$sidebar_topics_data = array_slice($all_topic_counts, 0, $top_n_topics, true);
+$sidebar_topics_output = array_map(function ($topic, $count) {
+    return ['Topic' => $topic, 'article_count' => $count];
+}, array_keys($sidebar_topics_data), $sidebar_topics_data);
+
+// Prepare topic trends for line and scatter charts using only top topics
+$top_topic_names = array_keys($sidebar_topics_data);
+$topic_trends_output = [];
+foreach ($top_topic_names as $topic) {
+    $topic_trends_output[$topic] = array_fill(0, $days_to_track, 0);
+}
+$days_labels = [];
+foreach ($period_dates_full as $index => $date_str) {
+    $days_labels[] = $date_str;
+    if (isset($daily_topic_counts[$date_str])) {
+        foreach ($top_topic_names as $topic) {
+            if (isset($daily_topic_counts[$date_str][$topic])) {
+                $topic_trends_output[$topic][$index] = $daily_topic_counts[$date_str][$topic];
+            }
+        }
     }
 }
 
-// Sort topics by frequency in descending order and get top 10 topics.
-arsort($trendingTopics);
-$trendingTopics = array_slice($trendingTopics, 0, 10, true);
+// Prepare Daily Top Topic for Bar Chart
+$daily_top_topic_output = [];
+foreach ($period_dates_full as $date_str) {
+    $top_topic = "N/A";
+    $max_count = 0;
+    if (isset($daily_topic_counts[$date_str]) && !empty($daily_topic_counts[$date_str])) {
+        arsort($daily_topic_counts[$date_str]);
+        $top_topic = key($daily_topic_counts[$date_str]);
+        $max_count = current($daily_topic_counts[$date_str]);
+    }
+    $daily_top_topic_output[] = [
+        "day" => date('D', strtotime($date_str)),
+        "topic" => $top_topic,
+        "count" => $max_count
+    ];
+}
 
-// --- Fetch user dashboard preferences ---
+// Fetch User Preferences (if available)
 $user_preferences = null;
 if (isset($_SESSION["user_id"])) {
     $user_id = (int) $_SESSION["user_id"];
-    $stmt_pref = $conn->prepare("SELECT visible_chart_types, data_timeframe FROM user_dashboard_preferences WHERE User_ID = ?");
+    $stmt_pref = $conn->prepare("SELECT visible_chart_types FROM user_dashboard_preferences WHERE User_ID = ?");
     if ($stmt_pref) {
         $stmt_pref->bind_param("i", $user_id);
         $stmt_pref->execute();
         $result_pref = $stmt_pref->get_result();
         if ($row_pref = $result_pref->fetch_assoc()) {
-            // The preferences are fetched as stored. If your column is a SET type or comma‑separated text,
-            // you may format it as needed before sending.
             $user_preferences = [
                 "visible_chart_types" => $row_pref["visible_chart_types"],
-                "data_timeframe" => $row_pref["data_timeframe"]
             ];
         }
         $stmt_pref->close();
     }
 }
 
-// --- Prepare the final JSON output ---
 $output = [
-    'trending_topics' => array_map(function ($topic, $count) {
-        return ['Topic' => $topic, 'article_count' => $count];
-    }, array_keys($trendingTopics), $trendingTopics),
-    'total_articles'  => $totalArticles,
-    'user_preferences'=> $user_preferences  // This will be null if no record was found.
+    'trending_topics'  => $sidebar_topics_output,
+    'total_articles'   => $totalArticles,
+    'last_update_time' => date('Y-m-d H:i:s'),
+    'chart_data' => [
+        'days_labels'      => $days_labels,
+        'topic_trends'     => $topic_trends_output,
+        'daily_top_topic'  => $daily_top_topic_output
+    ],
+    'user_preferences' => $user_preferences
 ];
 
-echo json_encode($output);
-
+echo json_encode($output, JSON_PRETTY_PRINT);
 $conn->close();
 ?>

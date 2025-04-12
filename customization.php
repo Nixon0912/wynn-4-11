@@ -19,8 +19,7 @@ if (isset($_GET['user_id']) && filter_var($_GET['user_id'], FILTER_VALIDATE_INT)
 
 // --- Initialize variables ---
 $current_prefs = [
-    'visible_chart_types' => ['line', 'bar', 'polar'], // Default charts
-    'data_timeframe' => 'monthly'                       // Default timeframe
+    'visible_chart_types' => ['line', 'bar', 'scatter'], // Default charts
 ];
 $message = '';
 $message_type = ''; // 'success' or 'error'
@@ -42,7 +41,7 @@ if (!$conn) {
     $fetch_error = 'Database connection failed: ' . $conn->connect_error;
     error_log("Customization DB Connection Error: " . $conn->connect_error);
 } else {
-    $stmt_fetch = $conn->prepare("SELECT visible_chart_types, data_timeframe FROM user_dashboard_preferences WHERE User_ID = ?");
+    $stmt_fetch = $conn->prepare("SELECT visible_chart_types FROM user_dashboard_preferences WHERE User_ID = ?");
     if ($stmt_fetch) {
         $stmt_fetch->bind_param("i", $user_id);
         $stmt_fetch->execute();
@@ -59,10 +58,7 @@ if (!$conn) {
             } else {
                 error_log("Customization Warning: No chart preferences found for User_ID $user_id. Using defaults.");
             }
-            // Use fetched timeframe if valid, else default
-            $allowed_timeframes = ['weekly', 'monthly', 'all_time'];
-            $fetched_timeframe = $pref_data['data_timeframe'] ?? 'monthly';
-            $current_prefs['data_timeframe'] = in_array($fetched_timeframe, $allowed_timeframes) ? $fetched_timeframe : 'monthly';
+
         } else {
             // No prefs found, defaults are in effect.
             // echo "<!-- DEBUG: No preferences found for user $user_id -->";
@@ -85,9 +81,7 @@ if ($fetch_error && !$message) {
 function isChartSelected($type, $selected_array) {
     return in_array($type, $selected_array);
 }
-function isTimeframeSelected($value, $selected_value) {
-    return $value === $selected_value;
-}
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -125,7 +119,6 @@ function isTimeframeSelected($value, $selected_value) {
 
   <main class="container">
     <div class="top-buttons">
-      <a href="index.html">Home</a>
       <!-- Link back to the specific user's dashboard -->
       <a href="dashboard.php?user_id=<?php echo $user_id; ?>">Back to Dashboard</a>
     </div>
@@ -157,37 +150,11 @@ function isTimeframeSelected($value, $selected_value) {
         Bar Chart <span class="form-note">(Article Distribution)</span>
       </label>
       <label>
-        <input type="checkbox" name="chart_types[]" value="polar"
-          <?php if (isChartSelected('polar', $current_prefs['visible_chart_types'])) echo 'checked'; ?>>
-        Polar Area Chart <span class="form-note">(Topic Distribution)</span>
-      </label>
-      <label>
-        <input type="checkbox" name="chart_types[]" value="wordcloud"
-          <?php if (isChartSelected('wordcloud', $current_prefs['visible_chart_types'])) echo 'checked'; ?>>
-        Word Cloud <span class="form-note">(Overall Topics - *Requires implementation*)</span>
-      </label>
-      <label>
-        <input type="checkbox" name="chart_types[]" value="heatmap"
-          <?php if (isChartSelected('heatmap', $current_prefs['visible_chart_types'])) echo 'checked'; ?>>
-        Heat Map <span class="form-note">(Topic Density - *Requires implementation*)</span>
+        <input type="checkbox" name="chart_types[]" value="scatter"
+          <?php if (isChartSelected('scatter', $current_prefs['visible_chart_types'])) echo 'checked'; ?>>
+        Scatter Plot Chart <span class="form-note">(Topic Distribution)</span>
       </label>
 
-      <h3>Choose Data Time Frame</h3>
-      <label>
-        <input type="radio" name="data_timeframe" value="weekly"
-          <?php if (isTimeframeSelected('weekly', $current_prefs['data_timeframe'])) echo 'checked'; ?>>
-        Weekly <span class="form-note">(*Data availability dependent*)</span>
-      </label>
-      <label>
-        <input type="radio" name="data_timeframe" value="monthly"
-          <?php if (isTimeframeSelected('monthly', $current_prefs['data_timeframe'])) echo 'checked'; ?>>
-        Monthly <span class="form-note">(Default)</span>
-      </label>
-      <label>
-        <input type="radio" name="data_timeframe" value="all_time"
-          <?php if (isTimeframeSelected('all_time', $current_prefs['data_timeframe'])) echo 'checked'; ?>>
-        All Time
-      </label>
 
       <button type="submit">Save Preferences</button>
     </form>

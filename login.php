@@ -219,7 +219,7 @@ $conn->close();
   <header>
     <h1>Login to your FinSight account</h1>
     <nav>
-      <a href="dashboard.html">Home</a>
+      <a href="index.html">Home</a>
       <a href="register.php">Register</a>
     </nav>
   </header>
@@ -258,7 +258,7 @@ $conn->close();
       </form>
 
       <p class="forgot-password">
-        <a href="reset_password.php">Forgot Password?</a>
+        <a href="forgot_password.php">Forgot Password?</a>
       </p>
     </div>
   </main>

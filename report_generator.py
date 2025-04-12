@@ -51,7 +51,7 @@ def sanitize_url_to_filename_stem(url):
     # 2. Replace common invalid/separator filename characters with underscores
     #    Includes: / \ : * ? " < > | & = # (Characters often found in paths/queries)
     #    CRUCIALLY: Does NOT include '.' in this list anymore.
-    sanitized = re.sub(r'[\\/:*?"<>|&=#]+', '_', sanitized)
+    sanitized = re.sub(r'[\\/:*?"<>|&=#.]+', '_', sanitized)
 
     # 3. Remove potential leading/trailing underscores created by replacements
     #    (e.g., if URL ended with / or query string)
